@@ -1,9 +1,15 @@
+## metaL core
+
+## Marvin Minsky extended frame model
+
 class Frame:
     def __init__(self, V):
         self.type = self.__class__.__name__.lower()
         self.val = V
         self.slot = {}
         self.nest = []
+
+    ## dump
 
     def __repr__(self):
         return self.dump()
@@ -20,3 +26,14 @@ class Frame:
         return '\n' + '\t' * depth
     def _val(self):
         return '%s' % self.val
+
+    ## operators
+
+    def __setitem__(self,key,that):
+        self.slot[key] = that ; return self
+    def __lshift__(self,that):
+        self[that.val] = that ; return self
+    def __floordiv__(self,that):
+        self.nest.append(that) ; return self
+
+print( Frame('Hello') // Frame('World') << Frame('shifted') )
