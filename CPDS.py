@@ -1,5 +1,7 @@
 ## metaL core
 
+import os,sys
+
 ## Marvin Minsky extended frame model
 
 class Frame:
@@ -36,4 +38,47 @@ class Frame:
     def __floordiv__(self,that):
         self.nest.append(that) ; return self
 
-print( Frame('Hello') // Frame('World') << Frame('shifted') )
+# print( Frame('Hello') // Frame('World') << Frame('shifted') )
+
+## Primitives
+
+class Prim(Frame): pass
+class Sym(Prim): pass
+class Str(Prim): pass
+
+## Active
+
+class Active(Frame): pass
+class Cmd(Active): pass
+class VM(Active): pass
+
+## FORTH machine
+
+vm = VM('metaL')
+
+## no-syntax lexer
+
+import ply.lex as lex
+
+tokens = ['sym','str']
+
+t_ignore = '[ \t\r\n]+'
+
+def t_sym(t):
+    r'[^ \t\r\n]+'
+    return Sym(t.value)
+
+def t_error(t):
+    raise SyntaxError(t)
+
+## interpreter
+
+def INTERP(ctx):
+    ctx.lexer = lex.lex() ; ctx.lexer.input(ctx.pop().val)
+    while True:
+        print(vm)
+        if not WORD(ctx): break
+
+if __name__ == '__main__':
+    vm // Str(open(sys.argv[0][:-3]+'.ini').read())
+    INTERP(vm)
