@@ -33,6 +33,8 @@ class Frame:
 
     ## operators
 
+    def __getitem__(self,key):
+        return self.slot[key]
     def __setitem__(self,key,that):
         self.slot[key] = that ; return self
     def __lshift__(self,that):
@@ -100,11 +102,17 @@ def WORD(ctx):
     if token: ctx // token
     return token
 
+def FIND(ctx):
+    token = ctx.pop()
+    try: ctx // ctx[token.val] ; return True
+    except KeyError: ctx // token ; return False
+
 def INTERP(ctx):
     ctx.lexer = lex.lex() ; ctx.lexer.input(ctx.pop().val)
     while True:
-        print(vm)
         if not WORD(ctx): break
+        if isinstance(ctx.top(),Sym):
+            if not FIND(ctx): raise SyntaxError(ctx)
 
 if __name__ == '__main__':
     vm // Str(open(sys.argv[0][:-3]+'.ini').read())
