@@ -3,4 +3,6 @@
 
 (c) Dmitry Ponyatov <<dponyatov@gmail.com>> 2019
 
-github: https://bitbucket.org/ponyatov/cpds/
+github: https://bitbucket.org/ponyatov/CPDS
+
+wiki manual: https://bitbucket.org/ponyatov/CPDS/wiki
