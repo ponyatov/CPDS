@@ -2,6 +2,8 @@
 
 import os,sys
 
+sys.stderr = sys.stdout = open(sys.argv[0][:-3]+'.log','w')
+
 ## Marvin Minsky extended frame model
 
 class Frame:
@@ -38,6 +40,13 @@ class Frame:
     def __floordiv__(self,that):
         self.nest.append(that) ; return self
 
+    ## stack
+
+    def pop(self):
+        return self.nest.pop(-1)
+    def top(self):
+        return self.nest[-1]
+
 # print( Frame('Hello') // Frame('World') << Frame('shifted') )
 
 ## Primitives
@@ -64,14 +73,32 @@ tokens = ['sym','str']
 
 t_ignore = '[ \t\r\n]+'
 
+states = (('str','exclusive'),)
+
+t_str_ignore = ''
+def t_str(t):
+    r"'"
+    t.lexer.push_state('str') ; t.lexer.string = ''
+def t_str_str(t):
+    r"'"
+    t.lexer.pop_state() ; return Str(t.lexer.string)
+def t_str_any(t):
+    r"."
+    t.lexer.string += t.value
+
 def t_sym(t):
-    r'[^ \t\r\n]+'
+    r'[`]|[^ \t\r\n]+'
     return Sym(t.value)
 
-def t_error(t):
+def t_ANY_error(t):
     raise SyntaxError(t)
 
 ## interpreter
+
+def WORD(ctx):
+    token = ctx.lexer.token()
+    if token: ctx // token
+    return token
 
 def INTERP(ctx):
     ctx.lexer = lex.lex() ; ctx.lexer.input(ctx.pop().val)
