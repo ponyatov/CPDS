@@ -1,0 +1,37 @@
+<style>
+    * { font: monospace; font-size: 3mm; }
+    #plot { width:99%; height:55%; border: solid black 1px; }
+</style>
+<script src="/go.js"></script>
+
+<pre id=dump>{{ctx.dump()}}</pre>
+<div id=plot></div>
+
+<script>
+
+var $ = go.GraphObject.make;
+var dia = $(go.Diagram, "plot");
+dia.model = $(go.TreeModel);
+
+dia.model.nodeDataArray = [
+    {% autoescape false %}
+    {{ctx.plot()}}
+    {% endautoescape %}
+    ];
+
+dia.nodeTemplate = $(go.Node,
+    $(go.TextBlock,
+        { background:"white", font:"3mm monospace", }, 
+        new go.Binding("text", "node"))
+    )
+dia.linkTemplate = $(go.Link,
+    $(go.Shape, { stroke:"black" }),
+    $(go.Shape, { toArrow: "StretchedDiamond", stroke:"white" }),
+    $(go.TextBlock,
+        { background:"white", font:"2mm monospace", segmentIndex: 0, segmentFraction: 0.8 }, 
+        new go.Binding("text", "link"))
+    )
+
+dia.layout = new go.ForceDirectedLayout();
+
+</script>

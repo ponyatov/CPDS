@@ -2,8 +2,6 @@
 
 import os,sys
 
-sys.stderr = sys.stdout = open(sys.argv[0][:-3]+'.log','w')
-
 ## Marvin Minsky extended frame model
 
 class Frame:
@@ -55,6 +53,16 @@ class Frame:
 
     def eval(self,ctx):
         ctx // self
+
+    def plot(self,depth=0,parent=None,link=None):
+        tree = ''
+        if parent: par = ', parent:0x%x ' % id(parent)
+        else: par = ''
+        if link: par += ', link:"%s" ' % link
+        tree += '{ key:0x%x, node:"%s:%s" %s },\n' % (id(self), self.type,self._val(), par)
+        for i in self.slot:
+            tree += self.slot[i].plot(depth+1,parent=self,link=i)
+        return tree
 
 # print( Frame('Hello') // Frame('World') << Frame('shifted') )
 
@@ -160,9 +168,28 @@ def INTERP(ctx):
 
 class IO(Frame): pass
 class Net(IO): pass
-class Web(Net): pass
+class IP(Net): pass
+class Port(Net): pass
+class Web(Net):
+    flask = __import__('flask')
+    def __init__(self,V):
+        Net.__init__(self,V)
+        self['ip'] = IP('127.0.0.1')
+        self['port'] = Port(8888)
+    def eval(self,ctx):
+        from flask import Flask,render_template
+        app = Flask(self.val)
+        app.config['SECRET_KEY'] = os.urandom(32)
 
-def WEB(ctx): ctx['WEB'] = Web(ctx.val)
+        @app.route('/')
+        def index(): return render_template('index.html',ctx=ctx)
+
+        @app.route('/<path>.js')
+        def jslib(path): return app.send_static_file(path + '.js')
+
+        app.run(host=self['ip'].val,port=self['port'].val,debug=True)
+
+def WEB(ctx): ctx['WEB'] = Web(ctx.val) ; ctx['WEB'].eval(ctx)
 vm << WEB
 
 if __name__ == '__main__':
