@@ -21,14 +21,15 @@ dia.model.nodeDataArray = [
 
 dia.nodeTemplate = $(go.Node,
     $(go.TextBlock,
-        { background:"white", font:"3mm monospace", }, 
+        { background:"white", font:"13mm monospace", }, 
         new go.Binding("text", "node"))
     )
 dia.linkTemplate = $(go.Link,
     $(go.Shape, { stroke:"black" }),
-    $(go.Shape, { toArrow: "StretchedDiamond", stroke:"white" }),
+    $(go.Shape, { toArrow: "StretchedDiamond", stroke:"white", fill:"black" }),
     $(go.TextBlock,
-        { background:"white", font:"2mm monospace", segmentIndex: 0, segmentFraction: 0.8 }, 
+        { background:"white", font:"7mm monospace",
+          segmentIndex: 0, segmentFraction: 0.6 }, 
         new go.Binding("text", "link"))
     )
 
