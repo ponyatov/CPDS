@@ -48,6 +48,13 @@ class Frame:
         return self.nest.pop(-1)
     def top(self):
         return self.nest[-1]
+    def dropall(self):
+        self.nest = [] ; return self
+
+    ## evan & convert
+
+    def eval(self,ctx):
+        ctx // self
 
 # print( Frame('Hello') // Frame('World') << Frame('shifted') )
 
@@ -60,12 +67,40 @@ class Str(Prim): pass
 ## Active
 
 class Active(Frame): pass
-class Cmd(Active): pass
-class VM(Active): pass
+
+class Cmd(Active):
+    def __init__(self,F):
+        Active.__init__(self, F.__name__)
+        self.fn = F
+    def eval(self,ctx):
+        self.fn(ctx)
+
+class VM(Active):
+    def __setitem__(self,key,F):
+        if callable(F): self[key] = Cmd(F) ; return self
+        else: Active.__setitem__(self,key,F)
+    def __lshift__(self,F):
+        if callable(F): return self << Cmd(F)
+        else: return Active.__lshift__(self,F)
 
 ## FORTH machine
 
 vm = VM('metaL')
+
+## debug
+
+def Q(ctx): print(ctx)
+vm['?'] = Q
+
+## stack
+
+def DOT(ctx): ctx.dropall()
+vm['.'] = DOT
+
+## manipulations
+
+def EQ(ctx): addr = ctx.pop().val ; ctx[addr] = ctx.pop()
+vm['='] = EQ
 
 ## no-syntax lexer
 
@@ -97,6 +132,9 @@ def t_ANY_error(t):
 
 ## interpreter
 
+def QUOTE(ctx): WORD(ctx)
+vm['`'] = QUOTE
+
 def WORD(ctx):
     token = ctx.lexer.token()
     if token: ctx // token
@@ -107,12 +145,25 @@ def FIND(ctx):
     try: ctx // ctx[token.val] ; return True
     except KeyError: ctx // token ; return False
 
+def EVAL(ctx):
+    ctx.pop().eval(ctx)
+
 def INTERP(ctx):
     ctx.lexer = lex.lex() ; ctx.lexer.input(ctx.pop().val)
     while True:
         if not WORD(ctx): break
         if isinstance(ctx.top(),Sym):
             if not FIND(ctx): raise SyntaxError(ctx)
+        EVAL(ctx)
+
+## Web
+
+class IO(Frame): pass
+class Net(IO): pass
+class Web(Net): pass
+
+def WEB(ctx): ctx['WEB'] = Web(ctx.val)
+vm << WEB
 
 if __name__ == '__main__':
     vm // Str(open(sys.argv[0][:-3]+'.ini').read())
